@@ -1,0 +1,4 @@
+devices:
+  - host: 127.0.0.1  # Localhost for testing (will fail gracefully)
+    device_type: cisco_ios
+    name: test-router-1

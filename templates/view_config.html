@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Viewing: {{ filename }}</h1>
+<pre style="background:#f4f4f4; padding:10px; overflow:auto; max-height:600px;">
+{{ content }}</pre>
+<a href="/history">Back to History</a>
+{% endblock %}

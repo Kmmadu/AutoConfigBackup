@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}AutoConfigBackup{% endblock %} — Cisco Config Vault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<nav class="topbar">
+  <a class="brand" href="{{ url_for('dashboard') }}">
+    <div class="brand-icon">
+      <svg width="34" height="34" viewBox="0 0 34 34">
+        <polygon points="17,2 31,10 31,24 17,32 3,24 3,10"
+          fill="none" stroke="rgba(27,160,215,.25)" stroke-width="1.5"/>
+        <polygon points="17,6 27,12 27,22 17,28 7,22 7,12"
+          fill="rgba(27,160,215,.12)" stroke="var(--cisco)" stroke-width="1.2"
+          class="ring"/>
+        <circle cx="17" cy="17" r="4" fill="var(--cisco)" opacity=".9"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">AutoConfigBackup</div>
+      <div class="brand-sub">Cisco IOS Config Vault</div>
+    </div>
+  </a>
+
+  <div class="topbar-right">
+    <a href="{{ url_for('dashboard') }}"
+       class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+      Dashboard
+    </a>
+    <a href="{{ url_for('devices_page') }}"
+       class="nav-link {% if request.endpoint == 'devices_page' %}active{% endif %}">
+      Devices
+    </a>
+    <a href="{{ url_for('history') }}"
+       class="nav-link {% if request.endpoint == 'history' %}active{% endif %}">
+      History
+    </a>
+  </div>
+</nav>
+
+<main>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flashes">
+        {% for cat, msg in messages %}
+          <div class="flash flash-{{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+
+<footer>
+  <span>AutoConfigBackup v1.0 · Cisco IOS Config Vault · Built for NOC/IT Support</span>
+  <span id="clock" class="mono"></span>
+</footer>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

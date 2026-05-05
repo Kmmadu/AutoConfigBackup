@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Backup History</h1>
+{% if backups %}
+<table border="1">
+    <tr>
+        <th>Filename</th>
+        <th>Size</th>
+        <th>Modified</th>
+    </tr>
+    {% for backup in backups %}
+    <tr>
+        <td>{{ backup.filename }}</td>
+        <td>{{ backup.size }}</td>
+        <td>{{ backup.modified }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>No backups found. Run <code>python3 src/main.py</code> to create your first backup.</p>
+{% endif %}
+{% endblock %}
