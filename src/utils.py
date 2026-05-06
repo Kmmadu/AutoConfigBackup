@@ -62,8 +62,14 @@ def load_devices(yaml_file="config/devices.yaml"):
             device["password"] = password
             if secret:
                 device["secret"] = secret
+            
+            # Ensure port is included if specified
+            if 'port' not in device:
+                device['port'] = 22  # Default SSH port
         
         logger.info(f"Loaded {len(devices)} devices from {yaml_file}")
+        for device in devices:
+            logger.debug(f"  - {device.get('name', device['host'])}: {device['host']}:{device.get('port', 22)}")
         return devices
     except Exception as e:
         logger.error(f"Failed to load devices: {e}")

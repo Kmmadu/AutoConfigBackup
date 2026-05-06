@@ -1,4 +1,7 @@
 devices:
-  - host: 127.0.0.1  # Localhost for testing (will fail gracefully)
+  - host: 127.0.0.1
     device_type: cisco_ios
-    name: test-router-1
+    name: Mock-Router-1
+    port: 2222  # Custom port for mock device
+    
+

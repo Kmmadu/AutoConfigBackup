@@ -1,22 +1,90 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Backup History</h1>
+<div class="page-header">
+    <div>
+        <h1>Backup History</h1>
+        <p>View, restore, or compare configuration backups</p>
+    </div>
+</div>
+
 {% if backups %}
-<table border="1">
-    <tr>
-        <th>Filename</th>
-        <th>Size</th>
-        <th>Modified</th>
-    </tr>
-    {% for backup in backups %}
-    <tr>
-        <td>{{ backup.filename }}</td>
-        <td>{{ backup.size }}</td>
-        <td>{{ backup.modified }}</td>
-    </tr>
-    {% endfor %}
-</table>
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Device Name</th>
+                <th>Backup Time</th>
+                <th>Size</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for backup in backups %}
+            <tr>
+                <td><strong>{{ backup.filename.split('_')[0] }}</strong></td>
+                <td>{{ backup.modified }}</td>
+                <td>{{ backup.size }}</td>
+                <td>
+                    <div class="flex gap-2">
+                        <a href="/view/{{ backup.filename }}" class="btn btn-ghost btn-sm">👁️ View</a>
+                        <button onclick="restoreConfig('{{ backup.filename }}')" 
+                                class="btn btn-cisco btn-sm"
+                                id="restore-{{ loop.index }}">
+                            🔄 Restore
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% else %}
-<p>No backups found. Run <code>python3 src/main.py</code> to create your first backup.</p>
+<div class="empty-state">
+    <div class="empty-state-icon">📭</div>
+    <div class="empty-state-title">No backups found</div>
+    <p style="margin-top: 0.5rem;">Run a backup first: <code>python3 src/main.py</code></p>
+</div>
 {% endif %}
+
+<script>
+async function restoreConfig(filename) {
+    const deviceName = filename.split('_')[0];
+    
+    // Confirm before restoring
+    const confirmed = confirm(`⚠️ WARNING: This will replace the ENTIRE configuration on ${deviceName}!\n\nAre you absolutely sure you want to restore ${filename}?`);
+    
+    if (!confirmed) return;
+    
+    // Find the button
+    const btn = event?.target?.closest('button');
+    const originalText = btn ? btn.innerHTML : 'Restore';
+    
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⟳</span> Restoring...';
+    }
+    
+    try {
+        const response = await fetch(`/api/restore/${encodeURIComponent(filename)}`, {
+            method: 'POST'
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert(`✅ Success!\n${data.message}`);
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            alert(`❌ Restore failed!\n${data.message}`);
+        }
+    } catch (error) {
+        alert(`❌ Error: ${error.message}`);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+}
+</script>
 {% endblock %}

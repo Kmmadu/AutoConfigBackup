@@ -1,21 +1,283 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Network Device Backup Dashboard</h1>
-<h2>Devices ({{ devices|length }})</h2>
-<table border="1">
-    <tr>
-        <th>Name</th>
-        <th>Host</th>
-        <th>Type</th>
-        <th>Status</th>
-    </tr>
+<div class="page-header">
+    <div>
+        <h1>Network Device Backup Dashboard</h1>
+        <p>Manage and monitor configuration backups for your network devices</p>
+    </div>
+    <div>
+        <button onclick="triggerBackupAll()" class="btn btn-cisco" id="backupAllBtn">
+            🚀 Backup All Devices
+        </button>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat" style="--accent: var(--cisco)">
+        <div class="stat-label">Total Devices</div>
+        <div class="stat-value" id="stat-devices">{{ devices|length }}</div>
+        <div class="stat-sub">configured in inventory</div>
+    </div>
+    <div class="stat" style="--accent: var(--green)">
+        <div class="stat-label">Backups Stored</div>
+        <div class="stat-value" id="stat-backups">{{ total_backups|default(0) }}</div>
+        <div class="stat-sub">configuration files</div>
+    </div>
+    <div class="stat" style="--accent: var(--amber)">
+        <div class="stat-label">Last Backup</div>
+        <div class="stat-value" id="stat-last">--</div>
+        <div class="stat-sub">latest successful run</div>
+    </div>
+</div>
+
+<h2 style="margin: 1.5rem 0 1rem 0;">Devices</h2>
+<div class="device-grid">
     {% for device in devices %}
-    <tr>
-        <td>{{ device.name }}</td>
-        <td>{{ device.host }}</td>
-        <td>{{ device.device_type }}</td>
-        <td>Pending</td>
-    </tr>
+    <div class="device-card">
+        <div class="device-top">
+            <div>
+                <div class="device-name">{{ device.name }}</div>
+                <div class="device-host">{{ device.host }}</div>
+            </div>
+            <span class="pill pill-cisco">{{ device.device_type }}</span>
+        </div>
+        <div class="device-body">
+            <div class="device-meta">
+                <div>
+                    <div class="meta-key">Last Backup</div>
+                    <div class="meta-val mono" id="last-{{ loop.index }}">Never</div>
+                </div>
+                <div>
+                    <div class="meta-key">Status</div>
+                    <div class="meta-val" id="status-{{ loop.index }}">
+                        <span class="pill pill-muted">Idle</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="device-footer">
+            <button onclick="triggerBackup('{{ device.name }}', {{ loop.index }})" 
+                    class="btn btn-cisco btn-sm" 
+                    style="flex: 1;"
+                    id="btn-{{ loop.index }}">
+                📥 Backup Now
+            </button>
+        </div>
+    </div>
     {% endfor %}
-</table>
+</div>
+
+<script>
+// Function to trigger backup for a single device
+async function triggerBackup(deviceName, idx) {
+    const btn = document.getElementById(`btn-${idx}`);
+    const statusSpan = document.getElementById(`status-${idx}`);
+    const originalText = btn.innerHTML;
+    
+    // Update UI to show loading
+    btn.disabled = true;
+    btn.innerHTML = '<span>⟳</span> Backing up...';
+    statusSpan.innerHTML = '<span class="pill pill-amber">Backing up...</span>';
+    
+    try {
+        const response = await fetch(`/api/backup/trigger/${encodeURIComponent(deviceName)}`, {
+            method: 'POST'
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+            statusSpan.innerHTML = '<span class="pill pill-green">Success</span>';
+            // Update last backup time
+            document.getElementById(`last-${idx}`).textContent = new Date().toLocaleString();
+            // Refresh stats
+            loadStats();
+        } else {
+            statusSpan.innerHTML = '<span class="pill pill-red">Failed</span>';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        statusSpan.innerHTML = '<span class="pill pill-red">Error</span>';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        // Reset status after 3 seconds
+        setTimeout(() => {
+            if (statusSpan.innerHTML.includes('Success') || statusSpan.innerHTML.includes('Failed')) {
+                statusSpan.innerHTML = '<span class="pill pill-muted">Idle</span>';
+            }
+        }, 3000);
+    }
+}
+
+// Function to trigger backup for all devices
+async function triggerBackupAll() {
+    const btn = document.getElementById('backupAllBtn');
+    const originalText = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span>⟳</span> Backing up all devices...';
+    
+    try {
+        const response = await fetch('/api/backup/trigger', {
+            method: 'POST'
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Refresh the page after 2 seconds
+            setTimeout(() => window.location.reload(), 2000);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+
+// Load statistics
+async function loadStats() {
+    try {
+        const response = await fetch('/api/backups/stats');
+        const stats = await response.json();
+        
+        document.getElementById('stat-devices').textContent = stats.devices;
+        document.getElementById('stat-backups').textContent = stats.backups;
+        document.getElementById('stat-last').textContent = stats.last_backup;
+    } catch (error) {
+        console.error('Failed to load stats:', error);
+    }
+}
+
+// Load stats on page load
+loadStats();
+</script>
 {% endblock %}
+
+<!-- Quick Restore Section -->
+<div class="card" style="margin-bottom: 1.5rem; margin-top: 2rem;">
+    <div class="card-header">
+        <span class="card-header-title">🔄 Quick Restore from Latest Backup</span>
+    </div>
+    <div class="card-body">
+        <div class="device-grid">
+            {% for device in devices %}
+            <div style="background: var(--bg3); padding: 0.8rem; border-radius: var(--radius);">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <strong>{{ device.name }}</strong><br>
+                        <span class="text-xs text-dim">{{ device.host }}</span>
+                    </div>
+                    <button onclick="restoreLatest('{{ device.name }}')" 
+                            class="btn btn-danger btn-sm">
+                        ⚠️ Restore from Latest Backup
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+async function restoreLatest(deviceName) {
+    const confirmed = confirm(`⚠️ DANGER: This will restore ${deviceName} to its LAST SAVED CONFIG!\n\nAny changes made since the last backup will be LOST.\n\nClick OK to continue or Cancel to abort.`);
+    
+    if (!confirmed) return;
+    
+    // Get the latest backup for this device
+    try {
+        const response = await fetch('/api/backups');
+        const backups = await response.json();
+        
+        // Filter backups for this device
+        const deviceBackups = backups.filter(b => b.filename.startsWith(deviceName));
+        if (deviceBackups.length === 0) {
+            alert(`No backups found for ${deviceName}`);
+            return;
+        }
+        
+        // Get the most recent backup (first in list)
+        const latestBackup = deviceBackups[0].filename;
+        
+        // Trigger restore
+        const restoreResponse = await fetch(`/api/restore/${latestBackup}`, {
+            method: 'POST'
+        });
+        const result = await restoreResponse.json();
+        
+        if (restoreResponse.ok) {
+            alert(`✅ ${deviceName} restored successfully!`);
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            alert(`❌ Restore failed: ${result.message}`);
+        }
+    } catch (error) {
+        alert(`Error: ${error.message}`);
+    }
+}
+</script>
+
+<!-- Quick Restore Section -->
+<div class="card" style="margin-bottom: 1.5rem; margin-top: 2rem;">
+    <div class="card-header">
+        <span class="card-header-title">🔄 Quick Restore from Latest Backup</span>
+    </div>
+    <div class="card-body">
+        <div class="device-grid">
+            {% for device in devices %}
+            <div style="background: var(--bg3); padding: 0.8rem; border-radius: var(--radius);">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <strong>{{ device.name }}</strong><br>
+                        <span class="text-xs text-dim">{{ device.host }}</span>
+                    </div>
+                    <button onclick="restoreLatest('{{ device.name }}')" 
+                            class="btn btn-danger btn-sm">
+                        ⚠️ Restore from Latest Backup
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+async function restoreLatest(deviceName) {
+    const confirmed = confirm(`⚠️ DANGER: This will restore ${deviceName} to its LAST SAVED CONFIG!\n\nAny changes made since the last backup will be LOST.\n\nClick OK to continue or Cancel to abort.`);
+    
+    if (!confirmed) return;
+    
+    // Get the latest backup for this device
+    try {
+        const response = await fetch('/api/backups');
+        const backups = await response.json();
+        
+        // Filter backups for this device
+        const deviceBackups = backups.filter(b => b.filename.startsWith(deviceName));
+        if (deviceBackups.length === 0) {
+            alert(`No backups found for ${deviceName}`);
+            return;
+        }
+        
+        // Get the most recent backup (first in list)
+        const latestBackup = deviceBackups[0].filename;
+        
+        // Trigger restore
+        const restoreResponse = await fetch(`/api/restore/${latestBackup}`, {
+            method: 'POST'
+        });
+        const result = await restoreResponse.json();
+        
+        if (restoreResponse.ok) {
+            alert(`✅ ${deviceName} restored successfully!`);
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            alert(`❌ Restore failed: ${result.message}`);
+        }
+    } catch (error) {
+        alert(`Error: ${error.message}`);
+    }
+}
+</script>

@@ -17,24 +17,50 @@ def connect_device(device_params, retries=2, delay=5):
     Returns:
         netmiko.ConnectHandler: Connection object or None if all retries fail
     """
+    # Extract custom port if provided
+    host = device_params.get('host')
+    device_type = device_params.get('device_type')
+    
+    # Build connection parameters
+    conn_params = {
+        'device_type': device_type,
+        'host': host,
+        'username': device_params.get('username'),
+        'password': device_params.get('password'),
+    }
+    
+    # Add custom port if specified
+    if 'port' in device_params and device_params['port']:
+        conn_params['port'] = device_params['port']
+        logger.info(f"Using custom port: {device_params['port']}")
+    
+    # Add secret if provided (for enable mode)
+    if 'secret' in device_params and device_params['secret']:
+        conn_params['secret'] = device_params['secret']
+    
     for attempt in range(1, retries + 1):
         try:
-            logger.info(f"Connecting to {device_params['host']} (attempt {attempt}/{retries})")
-            connection = ConnectHandler(**device_params)
-            # Send enable command if secret provided
-            if 'secret' in device_params and device_params['secret']:
+            logger.info(f"Connecting to {host}:{conn_params.get('port', 22)} (attempt {attempt}/{retries})")
+            connection = ConnectHandler(**conn_params)
+            
+            # Enter enable mode if secret provided
+            if 'secret' in conn_params:
                 connection.enable()
-            logger.info(f"Successfully connected to {device_params['host']}")
+                
+            logger.info(f"Successfully connected to {host}")
             return connection
+            
         except NetmikoAuthenticationException as auth_err:
-            logger.error(f"Authentication failed for {device_params['host']}: {auth_err}")
+            logger.error(f"Authentication failed for {host}: {auth_err}")
             return None  # No retry for bad credentials
+            
         except (NetmikoTimeoutException, Exception) as e:
-            logger.warning(f"Connection failed for {device_params['host']}: {e}")
+            logger.warning(f"Connection failed for {host}: {e}")
             if attempt < retries:
                 logger.info(f"Retrying in {delay} seconds...")
                 time.sleep(delay)
             else:
-                logger.error(f"All {retries} attempts failed for {device_params['host']}")
+                logger.error(f"All {retries} attempts failed for {host}")
                 return None
+    
     return None
