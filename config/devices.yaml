@@ -1,7 +1,12 @@
-devices:
-  - host: 127.0.0.1
-    device_type: cisco_ios
-    name: Mock-Router-1
-    port: 2222  # Custom port for mock device
-    
+# AutoConfigBackup - Device Inventory
+# Add your network devices below
+# 
+# Example:
+# devices:
+#   - host: 192.168.1.1
+#     device_type: cisco_ios
+#     name: Core-Switch-01
+#     port: 22
 
+devices:
+  # Add your Packet Tracer devices here

@@ -3,7 +3,7 @@
 <div class="page-header">
     <div>
         <h1>Backup History</h1>
-        <p>View, restore, or compare configuration backups</p>
+        <p>Configuration version archive and restore interface</p>
     </div>
 </div>
 
@@ -12,8 +12,8 @@
     <table>
         <thead>
             <tr>
-                <th>Device Name</th>
-                <th>Backup Time</th>
+                <th>Device</th>
+                <th>Backup Timestamp</th>
                 <th>Size</th>
                 <th>Actions</th>
             </tr>
@@ -26,11 +26,11 @@
                 <td>{{ backup.size }}</td>
                 <td>
                     <div class="flex gap-2">
-                        <a href="/view/{{ backup.filename }}" class="btn btn-ghost btn-sm">👁️ View</a>
+                        <a href="/view/{{ backup.filename }}" class="btn btn-ghost btn-sm">View</a>
                         <button onclick="restoreConfig('{{ backup.filename }}')" 
                                 class="btn btn-cisco btn-sm"
                                 id="restore-{{ loop.index }}">
-                            🔄 Restore
+                            Restore
                         </button>
                     </div>
                 </td>
@@ -41,28 +41,25 @@
 </div>
 {% else %}
 <div class="empty-state">
-    <div class="empty-state-icon">📭</div>
+    <div class="empty-state-icon">📄</div>
     <div class="empty-state-title">No backups found</div>
-    <p style="margin-top: 0.5rem;">Run a backup first: <code>python3 src/main.py</code></p>
+    <p style="margin-top: 0.5rem;">Run a backup operation: <code>python3 src/main.py</code></p>
 </div>
 {% endif %}
 
 <script>
 async function restoreConfig(filename) {
     const deviceName = filename.split('_')[0];
-    
-    // Confirm before restoring
-    const confirmed = confirm(`⚠️ WARNING: This will replace the ENTIRE configuration on ${deviceName}!\n\nAre you absolutely sure you want to restore ${filename}?`);
+    const confirmed = confirm(`WARNING: This will replace the configuration on ${deviceName} with:\n${filename}\n\nProceed?`);
     
     if (!confirmed) return;
     
-    // Find the button
     const btn = event?.target?.closest('button');
     const originalText = btn ? btn.innerHTML : 'Restore';
     
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<span>⟳</span> Restoring...';
+        btn.innerHTML = '<span class="loading-spinner"></span> Restoring...';
     }
     
     try {
@@ -72,13 +69,13 @@ async function restoreConfig(filename) {
         const data = await response.json();
         
         if (response.ok) {
-            alert(`✅ Success!\n${data.message}`);
+            alert(`Success: ${data.message}`);
             setTimeout(() => window.location.reload(), 1500);
         } else {
-            alert(`❌ Restore failed!\n${data.message}`);
+            alert(`Restore failed: ${data.message}`);
         }
     } catch (error) {
-        alert(`❌ Error: ${error.message}`);
+        alert(`Error: ${error.message}`);
     } finally {
         if (btn) {
             btn.disabled = false;

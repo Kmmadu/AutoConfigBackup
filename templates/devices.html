@@ -1,18 +1,55 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Device Inventory</h1>
-<table border="1">
-    <tr>
-        <th>Name</th>
-        <th>Host</th>
-        <th>Device Type</th>
-    </tr>
-    {% for device in devices %}
-    <tr>
-        <td>{{ device.name }}</td>
-        <td>{{ device.host }}</td>
-        <td>{{ device.device_type }}</td>
-    </tr>
-    {% endfor %}
-</table>
+<div class="page-header">
+    <div>
+        <h1>Device Inventory</h1>
+        <p>Managed network devices and connection parameters</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <span class="card-header-title">MANAGED DEVICES</span>
+    </div>
+    <div class="card-body">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Device Name</th>
+                        <th>IP Address</th>
+                        <th>Device Type</th>
+                        <th>SSH Port</th>
+                        <th>Credential Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for device in devices %}
+                    <tr>
+                        <td><strong>{{ device.name }}</strong></td>
+                        <td><code>{{ device.host }}</code></td>
+                        <td><span class="pill pill-cisco">{{ device.device_type }}</span></td>
+                        <td><code>{{ device.get('port', 22) }}</code></td>
+                        <td><span class="status-badge online">CONFIGURED</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 1.5rem;">
+    <div class="card-header">
+        <span class="card-header-title">CONFIGURATION SOURCE</span>
+    </div>
+    <div class="card-body">
+        <p>Device credentials are loaded from <code>.env</code> file using:</p>
+        <pre style="background: var(--bg); padding: 0.75rem; border-radius: var(--radius); margin-top: 0.5rem;">
+DEVICE_USERNAME=your_username
+DEVICE_PASSWORD=your_password
+DEVICE_SECRET=enable_secret (optional)</pre>
+        <p class="text-xs text-muted" style="margin-top: 0.75rem;">Inventory source: <code>config/devices.yaml</code></p>
+    </div>
+</div>
 {% endblock %}
