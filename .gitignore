@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Environment variables (CRITICAL - contains passwords!)
+.env
+.env.local
+.env.*.local
+
+# Backup files (these are large and device-specific)
+backups/*.cfg
+backups/
+!backups/.gitkeep
+
+# Logs
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Flask
+instance/
+.webassets-cache
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# MyPy
+.mypy_cache/
+
+# Project specific
+In_progress.png
+*.pyc
+*.pyo
+*.pyd
+
+# Git
+*.orig
+*.rej
+
+# Temporary files
+*.tmp
+*.temp
+__pycache__/
+*.pyc
