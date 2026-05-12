@@ -7,7 +7,7 @@
     </div>
     <div>
         <button onclick="triggerBackupAll()" class="btn btn-cisco" id="backupAllBtn">
-            <span class="btn-icon">⟳</span> Backup All Devices
+            <span class="btn-icon"></span> Backup All Devices
         </button>
     </div>
 </div>
@@ -63,7 +63,7 @@
                     <button onclick="triggerBackup('{{ device.name }}', {{ loop.index }})" 
                             class="btn btn-cisco btn-sm btn-full" 
                             id="btn-{{ loop.index }}">
-                        ⟳ Backup Configuration
+                        Backup Configuration
                     </button>
                 </div>
             </div>
@@ -87,7 +87,7 @@
                     </div>
                     <button onclick="restoreLatest('{{ device.name }}')" 
                             class="btn btn-danger btn-sm">
-                        ⚠ Restore Latest Backup
+                        Restore Latest Backup
                     </button>
                 </div>
             </div>

@@ -7,8 +7,8 @@ from git import Repo
 
 logger = logging.getLogger(__name__)
 
-# Load environment variables
-load_dotenv()
+# Load environment variables - REMOVED: now called explicitly by load_env()
+# load_dotenv()
 
 def load_env():
     """Load environment variables from .env file"""

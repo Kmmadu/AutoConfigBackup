@@ -326,6 +326,18 @@ main {
 .btn-sm { padding: .3rem .65rem; font-size: .72rem; }
 .btn-full { width: 100%; justify-content: center; }
 
+/* Danger Button */
+.btn-danger {
+    background: transparent;
+    color: var(--red);
+    border-color: rgba(255, 82, 82, 0.3);
+}
+
+.btn-danger:hover {
+    background: rgba(255, 82, 82, 0.08);
+    border-color: var(--red);
+}
+
 /* Pills */
 .pill {
   display: inline-block;
@@ -340,6 +352,60 @@ main {
 .pill-green { background: rgba(0,230,118,.1);   color: var(--green); border: 1px solid rgba(0,230,118,.25); }
 .pill-amber { background: rgba(255,196,0,.1);   color: var(--amber); border: 1px solid rgba(255,196,0,.25); }
 .pill-red   { background: rgba(255,82,82,.1);   color: var(--red);   border: 1px solid rgba(255,82,82,.25); }
+
+/* Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+}
+
+.status-badge::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-badge.online::before {
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+}
+
+.status-badge.offline::before {
+    background: var(--red);
+    box-shadow: 0 0 4px var(--red);
+}
+
+.status-badge.pending::before {
+    background: var(--amber);
+    animation: pulse 1.5s infinite;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-color: var(--cisco);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Pulse animation */
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.8); }
+}
 
 /* Table */
 .table-wrap { overflow-x: auto; }
@@ -423,4 +489,276 @@ footer {
 @media (max-width: 700px) {
   main { padding: 1rem; }
   .topbar { padding: 0 1rem; }
+}
+/* ============================================================
+   MOBILE RESPONSIVE STYLES - For demo video on any screen size
+   ============================================================ */
+
+/* Tablet and small desktop (max-width: 1024px) */
+@media (max-width: 1024px) {
+    main {
+        padding: 1.5rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 0.75rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .device-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+/* Mobile landscape (max-width: 768px) */
+@media (max-width: 768px) {
+    /* Top bar adjustments */
+    .topbar {
+        padding: 0 1rem;
+        height: auto;
+        min-height: 58px;
+        flex-wrap: wrap;
+    }
+    
+    .brand {
+        gap: 0.5rem;
+    }
+    
+    .brand-name {
+        font-size: 0.9rem;
+        letter-spacing: 0.08em;
+    }
+    
+    .brand-sub {
+        font-size: 0.5rem;
+    }
+    
+    .topbar-right {
+        gap: 0.25rem;
+    }
+    
+    .nav-link {
+        font-size: 0.65rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    /* Main content */
+    main {
+        padding: 1rem;
+    }
+    
+    /* Page header */
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .page-header h1 {
+        font-size: 1.2rem;
+    }
+    
+    .page-header p {
+        font-size: 0.6rem;
+    }
+    
+    /* Stats grid - 2 columns on mobile */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stat {
+        padding: 0.75rem;
+    }
+    
+    .stat-label {
+        font-size: 0.5rem;
+    }
+    
+    .stat-value {
+        font-size: 1.3rem;
+    }
+    
+    .stat-sub {
+        font-size: 0.5rem;
+    }
+    
+    /* Card adjustments */
+    .card-header {
+        padding: 0.5rem 1rem;
+    }
+    
+    .card-header-title {
+        font-size: 0.55rem;
+    }
+    
+    .card-body {
+        padding: 0.75rem;
+    }
+    
+    /* Device grid - single column on mobile */
+    .device-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .device-name {
+        font-size: 0.9rem;
+    }
+    
+    .device-host {
+        font-size: 0.6rem;
+    }
+    
+    .meta-key {
+        font-size: 0.5rem;
+    }
+    
+    .meta-val {
+        font-size: 0.7rem;
+    }
+    
+    /* Buttons */
+    .btn {
+        font-size: 0.7rem;
+        padding: 0.35rem 0.7rem;
+    }
+    
+    .btn-sm {
+        font-size: 0.65rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    /* Table - horizontal scroll instead of squish */
+    .table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    table {
+        min-width: 500px;
+    }
+    
+    th, td {
+        padding: 0.5rem;
+        font-size: 0.7rem;
+    }
+    
+    /* Footer */
+    footer {
+        padding: 0.5rem 1rem;
+        font-size: 0.5rem;
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+    
+    /* Badges and pills */
+    .pill {
+        font-size: 0.5rem;
+        padding: 0.12rem 0.35rem;
+    }
+    
+    .status-badge {
+        font-size: 0.6rem;
+    }
+    
+    /* Flash messages */
+    .flash {
+        font-size: 0.7rem;
+        padding: 0.5rem;
+    }
+}
+
+/* Mobile portrait (max-width: 480px) */
+@media (max-width: 480px) {
+    .brand-icon svg {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .brand-name {
+        font-size: 0.75rem;
+    }
+    
+    .brand-sub {
+        display: none;  /* Hide subtitle on very small screens */
+    }
+    
+    .nav-link {
+        font-size: 0.55rem;
+        padding: 0.2rem 0.4rem;
+    }
+    
+    .page-header h1 {
+        font-size: 1rem;
+    }
+    
+    .stats-grid {
+        gap: 0.4rem;
+    }
+    
+    .stat {
+        padding: 0.5rem;
+    }
+    
+    .stat-value {
+        font-size: 1.1rem;
+    }
+    
+    .device-card {
+        padding: 0;
+    }
+    
+    .device-top {
+        padding: 0.6rem 0.8rem;
+    }
+    
+    .device-body {
+        padding: 0.6rem 0.8rem;
+    }
+    
+    .device-footer {
+        padding: 0.5rem 0.8rem;
+    }
+    
+    .btn-full {
+        width: 100%;
+    }
+    
+    /* Stack buttons in disaster recovery section */
+    .device-grid .flex.justify-between {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+    
+    .btn-danger {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Touch-friendly button sizing for mobile */
+@media (hover: none) and (pointer: coarse) {
+    .btn, .nav-link, button {
+        min-height: 44px;  /* Apple's recommended minimum touch target size */
+    }
+    
+    .btn-sm {
+        min-height: 36px;
+    }
+}
+
+/* Prevent zoom on input focus (for better mobile demo) */
+@media (max-width: 768px) {
+    input, select, textarea {
+        font-size: 16px;  /* Prevents iOS zoom on focus */
+    }
 }

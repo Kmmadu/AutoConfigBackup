@@ -4,6 +4,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 import requests
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,7 @@ def alert_backup_failure(device_name: str, error_msg: str):
     body = f"""
 Device: {device_name}
 Error: {error_msg}
-Time: {__import__('datetime').datetime.now()}
+Time: {datetime.now()}
 
 Please check connectivity and device credentials.
     """
@@ -65,12 +66,13 @@ Please check connectivity and device credentials.
 def alert_config_changed(device_name: str, diff: str):
     """Alert when configuration changes"""
     subject = f"[CHANGE] Configuration changed on {device_name}"
+    diff_preview = diff[:1000]  # Limit diff length - extract to variable
     body = f"""
 Device: {device_name}
-Time: {__import__('datetime').datetime.now()}
+Time: {datetime.now()}
 
 Changes detected:
-{diff[:1000]}  # Limit diff length
+{diff_preview}
 
 Review and verify if this change was authorized.
     """

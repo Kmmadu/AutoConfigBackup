@@ -49,7 +49,7 @@ def run_backup_job() -> None:
     failed = 0
 
     for device in devices:
-        hostname = device.get("hostname", device["host"])
+        hostname = device.get("name", device["host"])
         result   = backup_device(device, username, password, git_enabled)
 
         if result["success"]:

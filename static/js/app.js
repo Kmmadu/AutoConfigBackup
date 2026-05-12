@@ -102,35 +102,11 @@ function updateStats(stats) {
     if (lastBackup && stats.last_backup) lastBackup.textContent = stats.last_backup;
 }
 
-// Handle backup buttons with loading state
-function initBackupButtons() {
-    document.querySelectorAll('[data-backup]').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            const deviceName = btn.getAttribute('data-backup-device');
-            const originalText = btn.innerHTML;
-            
-            btn.disabled = true;
-            btn.innerHTML = '<span>⟳</span> Backing up...';
-            
-            const success = await API.triggerBackup(deviceName);
-            
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-            
-            if (success && deviceName) {
-                // Reload after 2 seconds
-                setTimeout(() => window.location.reload(), 2000);
-            }
-        });
-    });
-}
-
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     updateClock();
     setInterval(updateClock, 1000);
-    initBackupButtons();
+    // Backup buttons use inline onclick handlers in templates
     startAutoRefresh(30);
 });
 

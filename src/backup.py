@@ -16,7 +16,7 @@ from difflib import unified_diff
 from pathlib import Path
 from typing import TypedDict, Optional
 
-from src.connection import connect_device
+from src.connection import build_device_params, connect_with_retry
 from src.utils import git_commit_and_push
 
 logger = logging.getLogger(__name__)
@@ -75,19 +75,10 @@ def backup_device(
     }
 
     # ── Build connection params ───────────────
-    device_params = {
-        "device_type": device["device_type"],
-        "host":        device["host"],
-        "username":    username,
-        "password":    password,
-    }
-    if device.get("secret"):
-        device_params["secret"] = device["secret"]
-    if device.get("port"):
-        device_params["port"] = device["port"]
+    device_params = build_device_params(device, username, password)
 
     # ── Connect ───────────────────────────────
-    conn = connect_device(device_params, retries=2)
+    conn = connect_with_retry(device_params, retries=2)
     if not conn:
         result["error"] = "Failed to connect after retries"
         return result
@@ -214,25 +205,15 @@ def restore_device_config(
         return result
 
     # ── Connect ───────────────────────────────
-    device_params = {
-        "device_type": device["device_type"],
-        "host":        device["host"],
-        "username":    username,
-        "password":    password,
-    }
-    if device.get("secret"):
-        device_params["secret"] = device["secret"]
-    if device.get("port"):
-        device_params["port"] = device["port"]
-
-    conn = connect_device(device_params, retries=2)
+    device_params = build_device_params(device, username, password)
+    conn = connect_with_retry(device_params, retries=2)
     if not conn:
         result["message"] = f"Failed to connect to {hostname}"
         return result
 
     try:
         # ── SAFETY: Backup current config first ──
-        logger.info("📸 Creating pre-restore backup of current config...")
+        logger.info("Creating pre-restore backup of current config...")
         current_config = conn.send_command("show running-config")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         pre_restore_file = Path("backups") / f"{hostname}_PRE_RESTORE_{timestamp}.cfg"
@@ -241,7 +222,7 @@ def restore_device_config(
         logger.info("Pre-restore backup saved: %s", pre_restore_file)
 
         # ── Confirm before proceeding ───────────
-        logger.warning("⚠️  RESTORING CONFIG to %s from %s", hostname, backup_file)
+        logger.warning("RESTORING CONFIG to %s from %s", hostname, backup_file)
 
         conn.send_command("configure terminal", expect_string=r"#")
 

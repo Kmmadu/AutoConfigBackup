@@ -1,7 +1,109 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Viewing: {{ filename }}</h1>
-<pre style="background:#f4f4f4; padding:10px; overflow:auto; max-height:600px;">
-{{ content }}</pre>
-<a href="/history">Back to History</a>
+<div class="page-header">
+    <div>
+        <h1>Configuration Details</h1>
+        <p>{{ filename }} — Cisco IOS Running Configuration</p>
+    </div>
+    <div>
+        <button onclick="copyConfig()" class="btn btn-cisco btn-sm" id="copyBtn">
+            Copy Configuration
+        </button>
+        <a href="/history" class="btn btn-ghost btn-sm">Back to History</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <span class="card-header-title">FILE INFORMATION</span>
+        <span class="pill pill-cisco">{{ content.split('\n')|length }} lines</span>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <div style="display: flex; background: var(--bg3); border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 0.7rem;">
+            <div style="padding: 0.5rem 0.75rem; background: var(--bg4); color: var(--text-muted); width: 60px; text-align: center; border-right: 1px solid var(--border);">Line</div>
+            <div style="padding: 0.5rem 0.75rem; color: var(--text-muted);">Configuration</div>
+        </div>
+        <div style="display: flex; max-height: 70vh; overflow-y: auto;">
+            <div id="line-numbers" style="font-family: var(--mono); font-size: 0.75rem; background: var(--bg4); color: var(--text-muted); padding: 0.75rem 0.5rem; text-align: right; border-right: 1px solid var(--border); user-select: none; min-width: 60px;">
+                <!-- Line numbers will be injected via JS -->
+            </div>
+            <pre id="config-content" style="flex: 1; margin: 0; padding: 0.75rem 1rem; font-family: var(--mono); font-size: 0.75rem; background: var(--bg2); color: var(--text); overflow-x: auto; white-space: pre-wrap; word-break: break-all;">{{ content }}</pre>
+        </div>
+    </div>
+</div>
+
+<script>
+const configContent = document.getElementById('config-content');
+const lineNumbersDiv = document.getElementById('line-numbers');
+
+// Generate line numbers
+function updateLineNumbers() {
+    const lines = configContent.innerText.split('\n');
+    const lineCount = lines.length;
+    let lineNumbersHtml = '';
+    for (let i = 1; i <= lineCount; i++) {
+        lineNumbersHtml += `<div style="padding: 0 0.5rem 0 0; line-height: 1.4;">${i}</div>`;
+    }
+    lineNumbersDiv.innerHTML = lineNumbersHtml;
+}
+
+// Simple Cisco IOS syntax highlighting
+function highlightCiscoConfig() {
+    let html = configContent.innerHTML;
+    
+    // Escape HTML first
+    html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    
+    // Highlight hostname
+    html = html.replace(/(hostname\s+)(\S+)/gi, '<span style="color: var(--cisco);">$1</span><span style="color: var(--green);">$2</span>');
+    
+    // Highlight interface commands
+    html = html.replace(/(interface\s+\S+)/gi, '<span style="color: var(--amber);">$1</span>');
+    
+    // Highlight IP addresses
+    html = html.replace(/(ip address\s+)(\d+\.\d+\.\d+\.\d+\s+\d+\.\d+\.\d+\.\d+)/gi, '<span style="color: var(--text-dim);">$1</span><span style="color: var(--green);">$2</span>');
+    
+    // Highlight enable/end
+    html = html.replace(/\b(end|exit|enable)\b/gi, '<span style="color: var(--red);">$1</span>');
+    
+    // Highlight comments
+    html = html.replace(/^(!.*$)/gm, '<span style="color: var(--text-muted);">$1</span>');
+    
+    configContent.innerHTML = html;
+}
+
+// Copy to clipboard
+async function copyConfig() {
+    const text = configContent.innerText;
+    try {
+        await navigator.clipboard.writeText(text);
+        const btn = document.getElementById('copyBtn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = 'Copied!';
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+        }, 2000);
+    } catch (err) {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy to clipboard');
+    }
+}
+
+// Sync scrolling between line numbers and config content
+function syncScroll() {
+    configContent.addEventListener('scroll', () => {
+        lineNumbersDiv.parentElement.scrollTop = configContent.scrollTop;
+    });
+}
+
+// Initialize
+updateLineNumbers();
+highlightCiscoConfig();
+syncScroll();
+
+// Re-sync on window resize
+window.addEventListener('resize', () => {
+    updateLineNumbers();
+});
+</script>
 {% endblock %}

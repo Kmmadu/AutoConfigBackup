@@ -1,66 +1,115 @@
-import logging
-from netmiko import ConnectHandler
-from netmiko.exceptions import NetmikoTimeoutException, NetmikoAuthenticationException
+"""
+connection.py
+─────────────
+Handles SSH connections to network devices via Netmiko.
+Implements a retry mechanism so transient failures don't kill a full run.
+"""
+from typing import Optional
+
 import time
+import logging
+from typing import Optional
+from netmiko import ConnectHandler
+from netmiko.exceptions import (
+    NetmikoTimeoutException,
+    NetmikoAuthenticationException,
+    NetmikoBaseException,
+)
 
 logger = logging.getLogger(__name__)
 
-def connect_device(device_params, retries=2, delay=5):
-    """
-    Establish SSH connection to network device using Netmiko with retry logic.
-    
-    Args:
-        device_params (dict): Netmiko connection dict (host, username, password, device_type)
-        retries (int): Number of retry attempts
-        delay (int): Seconds to wait between retries
-    
-    Returns:
-        netmiko.ConnectHandler: Connection object or None if all retries fail
-    """
-    # Extract custom port if provided
-    host = device_params.get('host')
-    device_type = device_params.get('device_type')
-    
-    # Build connection parameters
-    conn_params = {
-        'device_type': device_type,
-        'host': host,
-        'username': device_params.get('username'),
-        'password': device_params.get('password'),
+
+# ──────────────────────────────────────────────
+# Public API
+# ──────────────────────────────────────────────
+
+def build_device_params(device: dict, username: str, password: str) -> dict:
+    """Build connection parameters dictionary for Netmiko."""
+    device_params = {
+        'device_type': device['device_type'],
+        'host': device['host'],
+        'username': username,
+        'password': password,
     }
-    
-    # Add custom port if specified
-    if 'port' in device_params and device_params['port']:
-        conn_params['port'] = device_params['port']
-        logger.info(f"Using custom port: {device_params['port']}")
-    
-    # Add secret if provided (for enable mode)
-    if 'secret' in device_params and device_params['secret']:
-        conn_params['secret'] = device_params['secret']
-    
-    for attempt in range(1, retries + 1):
+    if device.get('secret'):
+        device_params['secret'] = device['secret']
+    if device.get('port'):
+        device_params['port'] = device['port']
+    return device_params
+
+
+def connect_with_retry(
+    device_params: dict,
+    retries: int = 2,
+    delay: int = 5,
+) -> Optional[ConnectHandler]:
+    """
+    Attempt an SSH connection up to `retries + 1` times.
+
+    Args:
+        device_params : Netmiko connection dict (from build_device_params).
+        retries       : Number of *extra* attempts after the first failure.
+        delay         : Seconds to wait between attempts.
+
+    Returns:
+        An open ConnectHandler on success, or None on total failure.
+    """
+    host = device_params.get("host", "unknown")
+    attempts = retries + 1  # total tries
+
+    for attempt in range(1, attempts + 1):
         try:
-            logger.info(f"Connecting to {host}:{conn_params.get('port', 22)} (attempt {attempt}/{retries})")
-            connection = ConnectHandler(**conn_params)
-            
-            # Enter enable mode if secret provided
-            if 'secret' in conn_params:
-                connection.enable()
-                
-            logger.info(f"Successfully connected to {host}")
+            logger.info(
+                "Connecting to %s (attempt %d/%d) …", host, attempt, attempts
+            )
+            connection = ConnectHandler(**device_params)
+            logger.info("Connected to %s successfully.", host)
             return connection
-            
-        except NetmikoAuthenticationException as auth_err:
-            logger.error(f"Authentication failed for {host}: {auth_err}")
-            return None  # No retry for bad credentials
-            
-        except (NetmikoTimeoutException, Exception) as e:
-            logger.warning(f"Connection failed for {host}: {e}")
-            if attempt < retries:
-                logger.info(f"Retrying in {delay} seconds...")
-                time.sleep(delay)
-            else:
-                logger.error(f"All {retries} attempts failed for {host}")
-                return None
-    
+
+        except NetmikoAuthenticationException:
+            # Auth failure is not transient – no point retrying
+            logger.error(
+                "Authentication failed for %s. Check credentials.", host
+            )
+            return None
+
+        except NetmikoTimeoutException as exc:
+            logger.warning(
+                "Timeout connecting to %s (attempt %d/%d): %s",
+                host, attempt, attempts, exc,
+            )
+
+        except NetmikoBaseException as exc:
+            logger.warning(
+                "Connection error to %s (attempt %d/%d): %s",
+                host, attempt, attempts, exc,
+            )
+
+        # Don't sleep after the last attempt
+        if attempt < attempts:
+            logger.info("Retrying %s in %d second(s) …", host, delay)
+            time.sleep(delay)
+
+    logger.error(
+        "All %d connection attempt(s) failed for %s.", attempts, host
+    )
     return None
+
+
+def disconnect(connection: ConnectHandler, host: str = "device") -> None:
+    """
+    Safely close a Netmiko connection, swallowing any disconnect errors.
+
+    Args:
+        connection : An active ConnectHandler.
+        host       : Device hostname / IP (used in log messages only).
+    """
+    try:
+        connection.disconnect()
+        logger.debug("Disconnected from %s.", host)
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.warning("Error while disconnecting from %s: %s", host, exc)
+
+
+# Legacy alias for backward compatibility
+connect_device = connect_with_retry
